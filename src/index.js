@@ -1,6 +1,7 @@
 import chalk from 'chalk'
 import clear from 'clear'
 import figlet from 'figlet'
+import _ from 'lodash'
 import Preferences from 'preferences'
 import { getCredentials } from './questions'
 
@@ -16,5 +17,5 @@ console.log(
 getCredentials((...args) => {
   console.log(args)
   pref.netpie = args
-  console.log(pref)
+  console.log(pref, _)
 })
