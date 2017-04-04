@@ -1,6 +1,9 @@
 import inquirer from 'inquirer'
+import chalk from 'chalk'
+import clear from 'clear'
+import figlet from 'figlet'
 
-export function getCredentials (callback) {
+function getCredentials (callback) {
   var questions = [
     {
       name: 'username',
@@ -28,4 +31,17 @@ export function getCredentials (callback) {
     }
   ]
   inquirer.prompt(questions).then(callback)
+}
+
+function showFiglet () {
+  clear()
+  console.log(
+    chalk.magenta(
+      figlet.textSync('netpie.js-cli', {horizontalLayout: 'full'})
+    )
+  )
+}
+
+export {
+  getCredentials, showFiglet
 }

@@ -1,10 +1,7 @@
 import CLI from 'clui'
-import chalk from 'chalk'
-import clear from 'clear'
-import figlet from 'figlet'
 import _ from 'underscore'
 import Preferences from 'preferences'
-import { getCredentials } from './questions'
+import { showFiglet, getCredentials } from './questions'
 import { login } from './netpie'
 
 import inquirer from 'inquirer'
@@ -12,6 +9,8 @@ import inquirer from 'inquirer'
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0
 
 const pref = new Preferences('config')
+
+showFiglet()
 
 let prompLogin = (processed) => {
   return inquirer.prompt(
@@ -28,12 +27,6 @@ let prompLogin = (processed) => {
 }
 
 let doLoginPrompt = () => {
-  clear()
-  console.log(
-    chalk.magenta(
-      figlet.textSync('netpie.js-cli', {horizontalLayout: 'full'})
-    )
-  )
   getCredentials((...args) => {
     // args[0].username = 'xnat.wrw@gmail.com'
     // args[0].password = 'UoTR8IG19oh7'
