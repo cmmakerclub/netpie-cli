@@ -3,7 +3,7 @@ import chalk from 'chalk'
 import clear from 'clear'
 import figlet from 'figlet'
 
-function getCredentials (callback) {
+function promptLogin (callback) {
   var questions = [
     {
       name: 'username',
@@ -30,7 +30,7 @@ function getCredentials (callback) {
       }
     }
   ]
-  inquirer.prompt(questions).then(callback)
+  return inquirer.prompt(questions).then(callback)
 }
 
 function showFiglet () {
@@ -43,5 +43,5 @@ function showFiglet () {
 }
 
 export {
-  getCredentials, showFiglet
+  promptLogin, showFiglet
 }
