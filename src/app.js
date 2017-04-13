@@ -4,9 +4,6 @@ import _ from 'underscore'
 import Preferences from 'preferences'
 import { login } from './lib/netpie'
 import inquirer from 'inquirer'
-// var winston = require('winston')
-import chalk from 'chalk'
-// var logger = new winston.Logger()
 import { promptLogin } from './questions'
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0
@@ -29,15 +26,12 @@ let prompLogin = (processed) => {
 
 let doLoginPrompt = () => {
   promptLogin((...args) => {
-    // args[0].username = 'xnat.wrw@gmail.com'
-    // args[0].password = 'UoTR8IG19oh7'
     var status = new CLI.Spinner('Authenticating you, please wait...')
     status.start()
     pref.netpie = {username: args.username, password: args.password}
-    login(...args).then((args2) => {
+    login(...args).then((appJson) => {
       status.stop()
-      let j = JSON.parse(args2)
-      let processed = _.map(j, (v, k) => v.appid)
+      let processed = _.map(appJson, (v, k) => v.appid)
       prompLogin(processed).then(() => {
         console.log('ok')
       })
@@ -47,9 +41,8 @@ let doLoginPrompt = () => {
     })
     .catch((ex) => {
       status.stop()
-      chalk.bold('invalid login')
-      console.log('invalid login')
       doLoginPrompt()
+      console.log(ex)
     })
   })
 }

@@ -1,12 +1,9 @@
-import Constants from '../Constants'
+import Constants from '../constants/Constants'
 import _ from 'underscore'
 import cheerio from 'cheerio'
 import extend from 'xtend'
 import superagent from 'superagent'
 const requestAgent = superagent.agent()
-
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0
-process.env.NODE_ENV = process.env.NODE_ENV || 'development'
 
 const parse = (html, type) => {
   return new Promise((resolve, reject) => {
@@ -61,11 +58,13 @@ const getAppList = (request) => {
     .then((...args) => {
       resolve(...args)
     })
-    .catch(reject)
+    .catch(() => {
+      reject(new Error('GET APP LIST FAILED.'))
+    })
   })
 }
 
-export let login = (request, callback) => {
+export let login = (request) => {
   return new Promise((resolve, reject) => {
     requestAgent.post('https://netpie.io:443/actions/login')
     .redirects(5)
@@ -77,16 +76,13 @@ export let login = (request, callback) => {
         requestAgent.saveCookies(res)
         let $ = cheerio.load(res.text)
         let title = $('title').text()
+        // LOGGED-IN
         if (title !== 'NETPIE | Login') {
           getAppList(request).then((arg0) => {
-            // console.log('args', arg0)
-            // console.dir(arg0, {depth: null, colors: true})
-            arg0.forEach((v, k) => {
-              console.log(`app[${k}] - ${v.op} - ${v.aid} - ${v.appid}`)
-            })
+            resolve(arg0)
           }).catch(reject)
         } else {
-          reject(new Error('invalid login'))
+          reject(new Error('[X] invalid login'))
         }
       } else {
         console.log('Oh no! error ', err)
