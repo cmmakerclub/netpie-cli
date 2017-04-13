@@ -2,7 +2,7 @@ import inquirer from 'inquirer'
 import chalk from 'chalk'
 import clear from 'clear'
 import figlet from 'figlet'
-let configStore = require('./configstore')
+let configStore = require('./lib/configstore')
 
 function promptLogin (callback) {
   const questions = [

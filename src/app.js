@@ -2,7 +2,7 @@
 import CLI from 'clui'
 import _ from 'underscore'
 import Preferences from 'preferences'
-import { login } from './netpie'
+import { login } from './lib/netpie'
 import inquirer from 'inquirer'
 // var winston = require('winston')
 import chalk from 'chalk'

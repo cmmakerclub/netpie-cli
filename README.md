@@ -1,12 +1,6 @@
-# Traffy Trash Bridge
+# Quick TDD setup with Node, ES6, Gulp and Mocha
 
-## Development 
+This repository accompanies my blog post entitled "Quick TDD setup with Node, ES6, Gulp and Mocha." 
 
-    $ npm install
-    $ npm run serve
-
-##  Production
-
-    $ npm install
-    $ npm install -g forever
-    $ forever dist/index.js
+You can view the blog post at
+http://www.adamcowley.co.uk/javascript/quick-test-driven-development-setup-with-node-es6-and-gulp/

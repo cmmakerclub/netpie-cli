@@ -1,4 +1,4 @@
-import Constants from './Constants'
+import Constants from '../Constants'
 import _ from 'underscore'
 import cheerio from 'cheerio'
 import extend from 'xtend'

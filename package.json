@@ -2,34 +2,33 @@
   "name": "netpie-cli",
   "version": "0.0.1",
   "description": "netpie-cli is an unofficial netpie management",
-  "main": "dist/index.js",
-  "scripts": {
-    "watch": "babel -w src/ -d dist/",
-    "build": "babel src/ -d dist/",
-    "serve": "babel -w src/ -d dist/ | nodemon --watch dist",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "Nat Weerawan (Chiang Mai Maker Club)",
-  "license": "MIT",
+  "main": "dist/app.js",
   "devDependencies": {
-    "babel": "^6.5.2",
-    "babel-cli": "^6.22.2",
-    "babel-core": "^6.22.1",
-    "babel-eslint": "^7.1.1",
+    "babel-eslint": "^7.2.2",
     "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-polyfill": "^6.22.0",
-    "babel-preset-env": "^1.3.2",
-    "babel-preset-es2015": "^6.22.0",
-    "babel-preset-stage-0": "^6.22.0",
-    "eslint": "^3.17.1",
-    "eslint-config-standard": "^7.0.1",
-    "eslint-plugin-html": "^2.0.1",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-stage-0": "^6.24.1",
+    "babel-register": "^6.9.0",
+    "chai": "^3.5.0",
+    "eslint-config-standard": "^10.2.0",
+    "eslint-plugin-import": "^2.2.0",
+    "eslint-plugin-node": "^4.2.2",
     "eslint-plugin-promise": "^3.5.0",
-    "eslint-plugin-standard": "^2.1.1",
-    "nodemon": "^1.11.0"
+    "eslint-plugin-standard": "^3.0.1",
+    "gulp": "^3.9.1",
+    "gulp-babel": "^6.1.2",
+    "gulp-clean": "^0.3.2",
+    "gulp-load-plugins": "^1.5.0",
+    "gulp-mocha": "^2.2.0",
+    "gulp-sourcemaps": "^2.6.0",
+    "gulp-eslint": "^3.0.1"
+  },
+  "babel": {
+    "presets": [
+      "es2015"
+    ]
   },
   "dependencies": {
-    "babel-runtime": "^6.22.0",
     "chalk": "^1.1.3",
     "cheerio": "^0.22.0",
     "clear": "0.0.1",
@@ -43,5 +42,11 @@
     "superagent": "^1.8.0-beta.2",
     "underscore": "^1.8.3",
     "winston": "^2.3.1"
+  },
+  "eslintConfig": {
+    "rules": {
+      "arrow-parens": 0,
+      "generator-star-spacing": 0
+    }
   }
 }
