@@ -41,7 +41,6 @@ const get = (url) => {
     })
   })
 }
-
 const getAppList = (request) => {
   return new Promise((resolve, reject) => {
     get('https://netpie.io/app', Constants.TYPE_APP_LIST)
@@ -56,14 +55,12 @@ const getAppList = (request) => {
       return Promise.all(tasks)
     })
     .then((apps) => {
-      return new Promise((resolve, reject) => {
-        const tasks = _.collect(apps, (content) => parseAppDetail(content).then(JSON.parse))
-        resolve(tasks)
-      })
+      const tasks = _.collect(apps, (content) => parseAppDetail(content).then(JSON.parse))
+      return Promise.all(tasks)
     })
-    .then((tasks) => Promise.all(tasks))
-    .then(JSON.stringify)
-    .then((...args) => resolve(...args))
+    .then((...args) => {
+      resolve(...args)
+    })
     .catch(reject)
   })
 }
@@ -78,12 +75,19 @@ export let login = (request, callback) => {
     .end(function (err, res) {
       if (!(err || !res.ok)) {
         requestAgent.saveCookies(res)
-        // getAppList(request, (...args) => { resolve(callback(...args)) })
-        console.log('must be resolved')
-        getAppList(request, (cb) => {
-          console.log('must be resolved 2')
-          resolve(cb)
-        }).catch(reject)
+        let $ = cheerio.load(res.text)
+        let title = $('title').text()
+        if (title !== 'NETPIE | Login') {
+          getAppList(request).then((arg0) => {
+            // console.log('args', arg0)
+            // console.dir(arg0, {depth: null, colors: true})
+            arg0.forEach((v, k) => {
+              console.log(`app[${k}] - ${v.op} - ${v.aid} - ${v.appid}`)
+            })
+          }).catch(reject)
+        } else {
+          reject(new Error('invalid login'))
+        }
       } else {
         console.log('Oh no! error ', err)
         reject(err)

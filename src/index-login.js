@@ -5,7 +5,7 @@ import Preferences from 'preferences'
 import { login } from './netpie'
 import inquirer from 'inquirer'
 // var winston = require('winston')
-// import chalk from 'chalk'
+import chalk from 'chalk'
 // var logger = new winston.Logger()
 import { promptLogin } from './questions'
 
@@ -45,8 +45,9 @@ let doLoginPrompt = () => {
     .then((...args) => {
       console.log('then ..', ...args)
     })
-    .catch(() => {
+    .catch((ex) => {
       status.stop()
+      chalk.bold('invalid login')
       console.log('invalid login')
       doLoginPrompt()
     })
