@@ -5,10 +5,12 @@ import { login, getAppList, getAllAppDetail } from './lib/netpie'
 import inquirer from 'inquirer'
 import { promptLogin, showFiglet } from './questions'
 import configstore from './lib/configstore'
+import chalk from 'chalk'
 import clear from 'clear'
+var Table = require('cli-table')
 let Constants = require('./constants/Constants')
 
-let showLoginActionAfterLoggedIn = (processed) => {
+let showSelectAppPrompt = (processed) => {
   return inquirer.prompt(
     {
       type: 'list',
@@ -18,7 +20,23 @@ let showLoginActionAfterLoggedIn = (processed) => {
         ...processed,
         new inquirer.Separator(),
         Constants.LOGIN_ACTION_CREATE_NEW_APP,
-        Constants.LOGIN_ACTION_REFRESH_APP
+        Constants.LOGIN_ACTION_REFRESH_APP,
+        new inquirer.Separator()
+      ]
+    }
+  )
+}
+
+let showSelectKeyFromAppPrompt = (processed) => {
+  return inquirer.prompt(
+    {
+      type: 'rawlist',
+      name: 'Actions',
+      message: 'Choose key what you want',
+      choices: [
+        Constants.LOGIN_ACTION_BACK,
+        new inquirer.Separator(),
+        ...processed
       ]
     }
   )
@@ -45,10 +63,10 @@ let doLoginToNetpie = (...args) => {
   .then((apps) => {
     status.stop()
     showLoggedScreen = () => {
-      return showLoginActionAfterLoggedIn(_.map(apps, (v, k) => v.appid))
+      return showSelectAppPrompt(_.map(apps, (v, k) => v.appid))
       .then((arg) => {
         if (arg.Actions === Constants.LOGIN_ACTION_CREATE_NEW_APP) {
-          console.log(`${Constants.LOGIN_ACTION_CREATE_NEW_APP} is not implemented yet.`)
+          console.log(chalk.bold.yellow(`${Constants.LOGIN_ACTION_CREATE_NEW_APP} is not implemented yet.`))
           showLoggedScreen()
         } else if (arg.Actions === Constants.LOGIN_ACTION_REFRESH_APP) {
           doLoginToNetpie({
@@ -60,11 +78,30 @@ let doLoginToNetpie = (...args) => {
           let apps = configstore.get('appkeys')
           let selectedApp = _.findWhere(apps, {appid: arg.Actions})
           let reformed = _.map(selectedApp.key, (appKey, idx) => {
-            let selected = _.pick(appKey, 'name', 'key', 'secret', 'keytype', 'online')
-            return selected
+            return _.pick(appKey, 'name', 'key', 'secret', 'keytype', 'online')
           })
-          console.log(reformed)
-          showLoggedScreen()
+
+          var tableHead = ['Choice', 'Name', 'Key Type', 'App Key', 'App Secret']
+          var table = new Table({
+            head: tableHead,
+            style: {head: ['green']}
+          })
+          _.each(reformed, (v, k) => {
+            table.push([k, v.name, v.keytype, v.key, v.secret])
+          })
+
+          console.log(table.toString())
+
+          showSelectKeyFromAppPrompt(reformed).then((action) => {
+            if (action.Actions === Constants.LOGIN_ACTION_BACK) {
+              clear()
+              showLoggedScreen()
+            } else {
+              var qrcode = require('qrcode-terminal')
+              qrcode.generate('cmmc.io')
+              showLoggedScreen()
+            }
+          })
         }
       })
     }

@@ -23,7 +23,7 @@ function promptLogin (callback) {
     {
       name: 'password',
       type: 'password',
-      // default: configStore.get('credentials.password'),
+      default: configStore.get('credentials.password'),
       message: 'Enter your password:',
       validate: function (value) {
         if (value.length) {
@@ -38,6 +38,10 @@ function promptLogin (callback) {
   return inquirer.prompt(questions).then(callback)
 }
 
+function promptAppkey () {
+
+}
+
 function showFiglet () {
   clear()
   console.log(
@@ -48,5 +52,5 @@ function showFiglet () {
 }
 
 export {
-  promptLogin, showFiglet
+  promptLogin, showFiglet, promptAppkey
 }
