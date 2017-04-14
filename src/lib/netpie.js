@@ -5,26 +5,24 @@ import extend from 'xtend'
 import superagent from 'superagent'
 const requestAgent = superagent.agent()
 
-const parse = (html, type) => {
+const parseHtmlContent = (html, type) => {
   return new Promise((resolve, reject) => {
-    let text
-    let $ = cheerio.load(html)
-    if (type !== Constants.TYPE_APP_LIST) {
-      if (type !== Constants.TYPE_APP_DETAIL) {
-        text = JSON.stringify({'data': 'NOT IN CASE'})
-        reject(text)
-      } else {
-        text = $('#key_list').text()
-      }
+    let $, domId, filterdDom
+    $ = cheerio.load(html)
+
+    if (type === Constants.TYPE_APP_LIST) {
+      domId = '#app_list'
+    } else if (type === Constants.TYPE_APP_DETAIL) {
+      domId = '#key_list'
     } else {
-      text = $('#app_list').text()
+      reject(new Error('not compatible netpie website'))
     }
-    resolve(text)
+
+    filterdDom = $(domId).text()
+
+    resolve(filterdDom)
   })
 }
-
-const parseAppDetail = _.partial(parse, _, Constants.TYPE_APP_DETAIL)
-const parseAppList = _.partial(parse, _, Constants.TYPE_APP_LIST)
 
 const get = (url) => {
   return new Promise((resolve, reject) => {
@@ -38,25 +36,22 @@ const get = (url) => {
     })
   })
 }
+
+const parseAppDetail = _.partial(parseHtmlContent, _, Constants.TYPE_APP_DETAIL)
+const parseAppList = _.partial(parseHtmlContent, _, Constants.TYPE_APP_LIST)
+
+const getAppDetail = (app) => {
+  return get('https://netpie.io/app/' + app.appid, Constants.TYPE_APP_DETAIL).then(parseAppDetail).then(JSON.parse)
+}
+const getAllAppDetail = (apps) => Promise.all(_.collect(apps.app, getAppDetail))
+
 const getAppList = (request) => {
   return new Promise((resolve, reject) => {
     get('https://netpie.io/app', Constants.TYPE_APP_LIST)
     .then(parseAppList)
     .then(JSON.parse)
     .then((json) => {
-      return extend({}, {apps: json})
-    })
-    .then((object) => {
-      const tasks = _.collect(object.apps.app,
-        (app) => get('https://netpie.io/app/' + app.appid, Constants.TYPE_APP_DETAIL))
-      return Promise.all(tasks)
-    })
-    .then((apps) => {
-      const tasks = _.collect(apps, (content) => parseAppDetail(content).then(JSON.parse))
-      return Promise.all(tasks)
-    })
-    .then((...args) => {
-      resolve(...args)
+      resolve(extend({}, {apps: json, request}))
     })
     .catch(() => {
       reject(new Error('GET APP LIST FAILED.'))
@@ -64,7 +59,7 @@ const getAppList = (request) => {
   })
 }
 
-export let login = (request) => {
+let login = (request) => {
   return new Promise((resolve, reject) => {
     requestAgent.post('https://netpie.io:443/actions/login')
     .redirects(5)
@@ -78,9 +73,7 @@ export let login = (request) => {
         let title = $('title').text()
         // LOGGED-IN
         if (title !== 'NETPIE | Login') {
-          getAppList(request).then((arg0) => {
-            resolve(arg0)
-          }).catch(reject)
+          resolve(requestAgent)
         } else {
           reject(new Error('[X] invalid login'))
         }
@@ -91,3 +84,5 @@ export let login = (request) => {
     })
   })
 }
+
+export { login, parseAppDetail, parseAppList, getAppList, getAllAppDetail }

@@ -49,9 +49,8 @@ gulp.task('tdd', function () {
 
 gulp.task('watch', function () {
   gulp.start('clean')
-  gulp.start('lint')
-  gulp.start('build')
-  gulp.watch(paths.src, ['lint', 'build'])
+  gulp.start('dev')
+  gulp.watch(paths.src, ['dev'])
 })
 
 gulp.task('lint', () => {

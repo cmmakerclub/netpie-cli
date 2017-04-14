@@ -9,11 +9,11 @@ function promptLogin (callback) {
     {
       name: 'username',
       type: 'input',
-      default: configStore.get('username'),
+      default: configStore.get('credentials.username'),
       message: 'Enter your NETPIE username or e-mail address:',
       validate: function (value) {
         if (value.length) {
-          configStore.set('username', value)
+          configStore.set('credentials.username', value)
           return true
         } else {
           return 'Please enter your username or e-mail address'
@@ -23,11 +23,11 @@ function promptLogin (callback) {
     {
       name: 'password',
       type: 'password',
-      default: configStore.get('password'),
+      default: configStore.get('credentials.password'),
       message: 'Enter your password:',
       validate: function (value) {
         if (value.length) {
-          configStore.set('password', value)
+          configStore.set('credentials.password', value)
           return true
         } else {
           return 'Please enter your password'
