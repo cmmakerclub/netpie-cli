@@ -23,7 +23,7 @@ function promptLogin (callback) {
     {
       name: 'password',
       type: 'password',
-      default: configStore.get('credentials.password'),
+      // default: configStore.get('credentials.password'),
       message: 'Enter your password:',
       validate: function (value) {
         if (value.length) {
