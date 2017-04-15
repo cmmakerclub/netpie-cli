@@ -1,7 +1,7 @@
 /** * Created by nat on 4/15/2017 AD. */
 
-import configStore from './configstore'
-import pref from './preference'
+import configStore from './Configstore'
+import pref from './Preference'
 import * as Constants from '../constants/Constants'
 
 export let isLoggedIn = () => configStore.get(Constants.CONF_IS_LOGGED_IN)

@@ -4,8 +4,8 @@ import clear from 'clear'
 import figlet from 'figlet'
 import * as Constants from './constants/Constants'
 import _ from 'underscore'
-import configStore from './lib/configstore'
-import * as Netpie from './lib/netpie'
+import configStore from './lib/Configstore'
+import * as Netpie from './lib/Netpie'
 import * as Utils from './lib/Utils'
 import CLI from 'clui'
 import Table from 'cli-table'
@@ -97,7 +97,7 @@ function showFiglet () {
   clear()
   console.log(
     chalk.magenta(
-      figlet.textSync('netpie.js-cli', {horizontalLayout: 'full'})
+      figlet.textSync(require('../package.json').name, {horizontalLayout: 'full'})
     )
   )
 }
@@ -140,6 +140,7 @@ function showLoggedInScreen () {
       showLoggedInScreen()
     } else if (when(Constants.LOGIN_ACTION_REFRESH_APP)) {
       clear()
+      showFiglet()
       displayLoggingInToNetpieScreen({
         username: configStore.get(Constants.CONF_USERNAME),
         password: configStore.get(Constants.CONF_PASSWORD)
@@ -150,25 +151,17 @@ function showLoggedInScreen () {
       /* choose appId */
       const appId = arg.Actions
       console.log(`App Id: ${chalk.bold.green(appId)}`)
+      clear()
       showSelectKeyFromAppPrompt(appId).then((choice) => {
         let when = _.partial(compare, choice.Actions)
         if (when(Constants.LOGIN_ACTION_BACK)) {
           clear()
+          showFiglet()
           showLoggedInScreen()
         } else if (when(Constants.LOGIN_ACTION_REFRESH_APP)) {
           console.log('refresh')
         } else {
-          console.log(`USER SELECTED = ${appId} - ${choice.Actions}`)
           console.log(configStore.all.apps.detail[appId].key[0])
-          // table2.push(_.values(configStore.all.apps.detail[appId].key[0]))
-          // table2.push(['App Id', appId], ['Choice', choice.Actions])
-          // table2.push({'Some Key': 'Some Value'},
-          //   {'Another much longer key': 'And its corresponding longer value'}
-          // )
-          // console.log(table2.toString())
-          // const qrcode = require('qrcode-terminal')
-          // qrcode.generate('cmmc.io')
-          // showLoggedInScreen()
         }
       })
     }
