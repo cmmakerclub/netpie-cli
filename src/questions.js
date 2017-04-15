@@ -43,7 +43,7 @@ function promptAppkey () {
 
 }
 
-let promptSelectApp = (processed) => {
+let showSelectAppPrompt = (processed) => {
   return inquirer.prompt(
     {
       type: 'list',
@@ -85,5 +85,5 @@ let showSelectKeyFromAppPrompt = (processed) => {
 }
 
 export {
-  promptLogin, showFiglet, promptAppkey, promptSelectApp, showSelectKeyFromAppPrompt
+  promptLogin, showFiglet, promptAppkey, showSelectAppPrompt, showSelectKeyFromAppPrompt
 }
