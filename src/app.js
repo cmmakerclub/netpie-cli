@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 'use strict'
-import * as Prompt from './Prompt'
+import * as Prompt from './lib/Prompt'
 import * as Utils from './lib/Utils'
 import chalk from 'chalk'
 

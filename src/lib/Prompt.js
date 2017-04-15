@@ -2,11 +2,11 @@ import inquirer from 'inquirer'
 import chalk from 'chalk'
 import clear from 'clear'
 import figlet from 'figlet'
-import * as Constants from './constants/Constants'
+import * as Constants from '../constants/Constants'
 import _ from 'underscore'
-import configStore from './lib/Configstore'
-import * as Netpie from './lib/Netpie'
-import * as Utils from './lib/Utils'
+import configStore from './Configstore'
+import * as Netpie from './Netpie'
+import * as Utils from './Utils'
 import CLI from 'clui'
 import Table from 'cli-table'
 
@@ -97,7 +97,7 @@ function showFiglet () {
   clear()
   console.log(
     chalk.magenta(
-      figlet.textSync(require('../package.json').name, {horizontalLayout: 'full'})
+      figlet.textSync(require('../../package.json').name, {horizontalLayout: 'full'})
     )
   )
 }
