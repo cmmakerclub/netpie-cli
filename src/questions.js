@@ -19,7 +19,7 @@ function promptLogin () {
       message: 'Enter your NETPIE username or e-mail address:',
       validate: function (value) {
         if (value.length) {
-          configStore.set(Constants.CONF_USERNAME, value)
+          Utils.set(Constants.CONF_USERNAME, value)
           return true
         } else {
           return 'Please enter your username or e-mail address'
@@ -29,11 +29,11 @@ function promptLogin () {
     {
       name: 'password',
       type: 'password',
-      default: configStore.get(Constants.CONF_PASSWORD),
+      default: Utils.get(Constants.CONF_PASSWORD),
       message: 'Enter your password:',
       validate: function (value) {
         if (value.length) {
-          configStore.set(Constants.CONF_PASSWORD, value)
+          Utils.set(Constants.CONF_PASSWORD, value)
           return true
         } else {
           return 'Please enter your password'
@@ -46,8 +46,8 @@ function promptLogin () {
 
 function displayLoggingInToNetpieScreen () {
   const status = new CLI.Spinner('Authenticating you, please wait...')
-  let username = configStore.get(Constants.CONF_USERNAME)
-  let password = configStore.get(Constants.CONF_PASSWORD)
+  let username = Utils.get(Constants.CONF_USERNAME)
+  let password = Utils.get(Constants.CONF_PASSWORD)
   status.start()
   return Netpie.login({username, password})
   .then(Netpie.getAppList)
@@ -158,16 +158,14 @@ function showLoggedInScreen () {
         } else if (when(Constants.LOGIN_ACTION_REFRESH_APP)) {
           console.log('refresh')
         } else {
-          // let appsDetail = configStore.get(Constants.CONF_APPS_DETAIL)
-          // const selectedAppWithDetail = _.findWhere(appsDetail, {appid: appId, name: choice.Actions})
-          // console.log(selectedAppWithDetail)
           console.log(`USER SELECTED = ${appId} - ${choice.Actions}`)
-          let table2 = new Table()
+          console.log(configStore.all.apps.detail[appId].key[0])
+          // table2.push(_.values(configStore.all.apps.detail[appId].key[0]))
           // table2.push(['App Id', appId], ['Choice', choice.Actions])
           // table2.push({'Some Key': 'Some Value'},
           //   {'Another much longer key': 'And its corresponding longer value'}
           // )
-          console.log(table2.toString())
+          // console.log(table2.toString())
           // const qrcode = require('qrcode-terminal')
           // qrcode.generate('cmmc.io')
           // showLoggedInScreen()
