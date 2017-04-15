@@ -8,15 +8,14 @@ import configStore from './lib/configstore'
 import * as Netpie from './lib/netpie'
 import * as Utils from './lib/Utils'
 import CLI from 'clui'
-
-var Table = require('cli-table')
+import Table from 'cli-table'
 
 function promptLogin () {
   const questions = [
     {
       name: 'username',
       type: 'input',
-      default: configStore.get('credentials.username'),
+      default: configStore.get(Constants.CONF_USERNAME),
       message: 'Enter your NETPIE username or e-mail address:',
       validate: function (value) {
         if (value.length) {
@@ -34,7 +33,7 @@ function promptLogin () {
       message: 'Enter your password:',
       validate: function (value) {
         if (value.length) {
-          configStore.set('credentials.password', value)
+          configStore.set(Constants.CONF_PASSWORD, value)
           return true
         } else {
           return 'Please enter your password'
@@ -63,13 +62,17 @@ function displayLoggingInToNetpieScreen () {
   .then(Netpie.getAllAppDetail)
   .then((apps) => {
     status.stop()
-    configStore.set(Constants.TYPE_APP_DETAIL, apps)
+    configStore.set(Constants.CONF_APPS_DETAIL, apps)
     return showLoggedInScreen()
+  })
+  .catch((err) => {
+    status.stop()
+    throw err
   })
 }
 
 function showSelectAppPrompt () {
-  let apps = configStore.get(Constants.CONF_APPS_LIST)
+  let apps = configStore.get(Constants.CONF_APPS_DETAIL)
   let processed = _.map(apps, (v, k) => v.appid)
   return inquirer.prompt(
     {
@@ -102,7 +105,7 @@ let showSelectKeyFromAppPrompt = (appId) => {
   const head = ['Choice', 'Name', 'Key Type', 'App Key', 'App Secret']
   const table = new Table({head, style: {head: ['green']}})
 
-  let apps = configStore.get('appkeys')
+  let apps = configStore.get(Constants.CONF_APPS_DETAIL)
   let selectedApp = _.findWhere(apps, {appid: appId})
   let reformed = _.map(selectedApp.key, (appKey, idx) => _.pick(appKey, 'name', 'key', 'secret', 'keytype', 'online'))
   _.each(reformed, (v, k) => table.push([k + NUM_MENUS + 1, v.name, v.keytype, v.key, v.secret]))
@@ -129,7 +132,6 @@ function showLoggedInScreen () {
   .then((arg) => {
     const action = arg.Actions
     let when = _.partial(compare, action)
-
     if (when(Constants.LOGIN_ACTION_CREATE_NEW_APP)) {
       console.log(chalk.bold.yellow(`${Constants.LOGIN_ACTION_CREATE_NEW_APP} is not implemented yet.`))
       showLoggedInScreen()
@@ -150,7 +152,7 @@ function showLoggedInScreen () {
           clear()
           showLoggedInScreen()
         } else {
-          console.log(`USER SELECTED = ${choice.Actions}`)
+          console.log(`USER SELECTED = ${appId} - ${choice.Actions}`)
           // const qrcode = require('qrcode-terminal')
           // qrcode.generate('cmmc.io')
           // showLoggedInScreen()
