@@ -1,6 +1,6 @@
 {
   "name": "netpie-cli",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "netpie-cli is an unofficial netpie management tools that developed by CMMC",
   "main": "dist/app.js",
   "preferGlobal": true,
