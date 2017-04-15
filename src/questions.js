@@ -44,16 +44,19 @@ function promptLogin () {
   return inquirer.prompt(questions)
 }
 
-function displayLoggingInToNetpieScreen (...args) {
+function displayLoggingInToNetpieScreen () {
   const status = new CLI.Spinner('Authenticating you, please wait...')
+  let username = configStore.get('credentials.username')
+  let password = configStore.get('credentials.password')
   status.start()
-  return Netpie.login(...args)
+  return Netpie.login({username, password})
   .then(Netpie.getAppList)
   .then((msg) => {
     status.stop()
     status.message('Fetching apps...')
     status.start()
     configStore.set('apps', msg.apps)
+    configStore.set('isLoggedIn', true)
     return msg.apps
   })
   .then(Netpie.getAllAppDetail)
@@ -77,6 +80,7 @@ function showSelectAppPrompt () {
         new inquirer.Separator(),
         Constants.LOGIN_ACTION_CREATE_NEW_APP,
         Constants.LOGIN_ACTION_REFRESH_APP,
+        Constants.LOGIN_ACTION_LOGOUT,
         new inquirer.Separator()
       ]
     }
@@ -93,20 +97,15 @@ function showFiglet () {
 }
 
 let showSelectKeyFromAppPrompt = (appId) => {
+  const NUM_MENUS = 1
+
+  const head = ['Choice', 'Name', 'Key Type', 'App Key', 'App Secret']
+  const table = new Table({head, style: {head: ['green']}})
+
   let apps = configStore.get('appkeys')
   let selectedApp = _.findWhere(apps, {appid: appId})
-  let reformed = _.map(selectedApp.key, (appKey, idx) => {
-    return _.pick(appKey, 'name', 'key', 'secret', 'keytype', 'online')
-  })
-  const tableHead = ['Choice', 'Name', 'Key Type', 'App Key', 'App Secret']
-  const table = new Table({
-    head: tableHead,
-    style: {head: ['green']}
-  })
-  _.each(reformed, (v, k) => {
-    table.push([k, v.name, v.keytype, v.key, v.secret])
-  })
-
+  let reformed = _.map(selectedApp.key, (appKey, idx) => _.pick(appKey, 'name', 'key', 'secret', 'keytype', 'online'))
+  _.each(reformed, (v, k) => table.push([k + NUM_MENUS, v.name, v.keytype, v.key, v.secret]))
   console.log(table.toString())
   return inquirer.prompt(
     {
@@ -126,6 +125,7 @@ function showLoggedInScreen () {
   clear()
   return showSelectAppPrompt()
   .then((arg) => {
+    const appId = arg.Actions
     if (arg.Actions === Constants.LOGIN_ACTION_CREATE_NEW_APP) {
       console.log(chalk.bold.yellow(`${Constants.LOGIN_ACTION_CREATE_NEW_APP} is not implemented yet.`))
       showLoggedInScreen()
@@ -134,9 +134,14 @@ function showLoggedInScreen () {
         username: configStore.get('credentials.username'),
         password: configStore.get('credentials.password')
       })
+    } else if (arg.Actions === Constants.LOGIN_ACTION_LOGOUT) {
+      console.log(`LOGOUT`)
+      configStore.delete('apps')
+      configStore.delete('appkeys')
+      configStore.delete('credentials.password')
+      configStore.set('isLoggedIn', false)
     } else {
       console.log('you choose app detail: ', arg.Actions)
-      let appId = arg.Actions
       showSelectKeyFromAppPrompt(appId).then((action) => {
         if (action.Actions === Constants.LOGIN_ACTION_BACK) {
           clear()
