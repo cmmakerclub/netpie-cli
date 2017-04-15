@@ -6,6 +6,7 @@ import * as Constants from './constants/Constants'
 import _ from 'underscore'
 import configStore from './lib/configstore'
 import * as Netpie from './lib/netpie'
+import * as Utils from './lib/Utils'
 import CLI from 'clui'
 
 var Table = require('cli-table')
@@ -19,7 +20,7 @@ function promptLogin () {
       message: 'Enter your NETPIE username or e-mail address:',
       validate: function (value) {
         if (value.length) {
-          configStore.set('credentials.username', value)
+          configStore.set(Constants.CONF_USERNAME, value)
           return true
         } else {
           return 'Please enter your username or e-mail address'
@@ -29,7 +30,7 @@ function promptLogin () {
     {
       name: 'password',
       type: 'password',
-      default: configStore.get('credentials.password'),
+      default: configStore.get(Constants.CONF_PASSWORD),
       message: 'Enter your password:',
       validate: function (value) {
         if (value.length) {
@@ -46,8 +47,8 @@ function promptLogin () {
 
 function displayLoggingInToNetpieScreen () {
   const status = new CLI.Spinner('Authenticating you, please wait...')
-  let username = configStore.get('credentials.username')
-  let password = configStore.get('credentials.password')
+  let username = configStore.get(Constants.CONF_USERNAME)
+  let password = configStore.get(Constants.CONF_PASSWORD)
   status.start()
   return Netpie.login({username, password})
   .then(Netpie.getAppList)
@@ -55,20 +56,20 @@ function displayLoggingInToNetpieScreen () {
     status.stop()
     status.message('Fetching apps...')
     status.start()
-    configStore.set('apps', msg.apps)
-    configStore.set('isLoggedIn', true)
+    configStore.set(Constants.CONF_APPS_LIST, msg.apps)
+    configStore.set(Constants.CONF_IS_LOGGED_IN, true)
     return msg.apps
   })
   .then(Netpie.getAllAppDetail)
   .then((apps) => {
     status.stop()
-    configStore.set('appkeys', apps)
+    configStore.set(Constants.TYPE_APP_DETAIL, apps)
     return showLoggedInScreen()
   })
 }
 
 function showSelectAppPrompt () {
-  let apps = configStore.get('appkeys')
+  let apps = configStore.get(Constants.CONF_APPS_LIST)
   let processed = _.map(apps, (v, k) => v.appid)
   return inquirer.prompt(
     {
@@ -98,7 +99,6 @@ function showFiglet () {
 
 let showSelectKeyFromAppPrompt = (appId) => {
   const NUM_MENUS = 1
-
   const head = ['Choice', 'Name', 'Key Type', 'App Key', 'App Secret']
   const table = new Table({head, style: {head: ['green']}})
 
@@ -109,6 +109,7 @@ let showSelectKeyFromAppPrompt = (appId) => {
   if (_.size(table) > 0) {
     console.log(table.toString())
   }
+  let choices = _.map(reformed, (v, k) => `${v.name}`)
   return inquirer.prompt(
     {
       type: 'rawlist',
@@ -117,7 +118,7 @@ let showSelectKeyFromAppPrompt = (appId) => {
       choices: [
         Constants.LOGIN_ACTION_BACK,
         new inquirer.Separator(),
-        ...reformed
+        ...choices
       ]
     }
   )
@@ -134,15 +135,11 @@ function showLoggedInScreen () {
       showLoggedInScreen()
     } else if (when(Constants.LOGIN_ACTION_REFRESH_APP)) {
       displayLoggingInToNetpieScreen({
-        username: configStore.get('credentials.username'),
-        password: configStore.get('credentials.password')
+        username: configStore.get(Constants.CONF_USERNAME),
+        password: configStore.get(Constants.CONF_PASSWORD)
       })
     } else if (when(Constants.LOGIN_ACTION_LOGOUT)) {
-      console.log(`LOGOUT`)
-      configStore.delete('apps')
-      configStore.delete('appkeys')
-      configStore.delete('credentials.password')
-      configStore.set('isLoggedIn', false)
+      Utils.logout()
     } else {
       /* choose appId */
       const appId = arg.Actions
@@ -153,8 +150,9 @@ function showLoggedInScreen () {
           clear()
           showLoggedInScreen()
         } else {
-          const qrcode = require('qrcode-terminal')
-          qrcode.generate('cmmc.io')
+          console.log(`USER SELECTED = ${choice.Actions}`)
+          // const qrcode = require('qrcode-terminal')
+          // qrcode.generate('cmmc.io')
           // showLoggedInScreen()
         }
       })

@@ -14,4 +14,10 @@ Constants.LOGIN_ACTION_REFRESH_APP = 'Refresh'
 Constants.LOGIN_ACTION_BACK = 'Back'
 Constants.LOGIN_ACTION_LOGOUT = 'Logout'
 
+Constants.CONF_APPS_KEY = 'appkeys'
+Constants.CONF_APPS_LIST = 'apps'
+Constants.CONF_USERNAME = 'credentials.username'
+Constants.CONF_PASSWORD = 'credentials.password'
+Constants.CONF_IS_LOGGED_IN = 'isLoggedIn'
+
 module.exports = Constants
