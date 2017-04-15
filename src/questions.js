@@ -52,6 +52,7 @@ function displayLoggingInToNetpieScreen () {
   return Netpie.login({username, password})
   .then(Netpie.getAppList)
   .then((msg) => {
+    msg.apps.app = _.indexBy(msg.apps.app, 'appid')
     status.stop()
     status.message('Fetching apps...')
     status.start()
@@ -62,6 +63,7 @@ function displayLoggingInToNetpieScreen () {
   .then(Netpie.getAllAppDetail)
   .then((apps) => {
     status.stop()
+    apps = _.indexBy(apps, 'appid')
     configStore.set(Constants.CONF_APPS_DETAIL, apps)
     return showLoggedInScreen()
   })
@@ -101,14 +103,14 @@ function showFiglet () {
 }
 
 let showSelectKeyFromAppPrompt = (appId) => {
-  const NUM_MENUS = 1
-  const head = ['Choice', 'Name', 'Key Type', 'App Key', 'App Secret']
+  const NUM_MENUS = 2
+  const head = ['Choice', 'Name', 'Key Type', 'App Key', 'App Secret', 'Online']
   const table = new Table({head, style: {head: ['green']}})
 
   let apps = configStore.get(Constants.CONF_APPS_DETAIL)
   let selectedApp = _.findWhere(apps, {appid: appId})
   let reformed = _.map(selectedApp.key, (appKey, idx) => _.pick(appKey, 'name', 'key', 'secret', 'keytype', 'online'))
-  _.each(reformed, (v, k) => table.push([k + NUM_MENUS + 1, v.name, v.keytype, v.key, v.secret]))
+  _.each(reformed, (v, k) => table.push([k + NUM_MENUS + 1, v.name, v.keytype, v.key, v.secret, v.online]))
   if (_.size(table) > 0) {
     console.log(table.toString())
   }
@@ -120,6 +122,7 @@ let showSelectKeyFromAppPrompt = (appId) => {
       message: 'Choose key what you want',
       choices: [
         Constants.LOGIN_ACTION_BACK,
+        // Constants.LOGIN_ACTION_REFRESH_APP,
         new inquirer.Separator(),
         ...choices
       ]
@@ -136,6 +139,7 @@ function showLoggedInScreen () {
       console.log(chalk.bold.yellow(`${Constants.LOGIN_ACTION_CREATE_NEW_APP} is not implemented yet.`))
       showLoggedInScreen()
     } else if (when(Constants.LOGIN_ACTION_REFRESH_APP)) {
+      clear()
       displayLoggingInToNetpieScreen({
         username: configStore.get(Constants.CONF_USERNAME),
         password: configStore.get(Constants.CONF_PASSWORD)
@@ -151,8 +155,19 @@ function showLoggedInScreen () {
         if (when(Constants.LOGIN_ACTION_BACK)) {
           clear()
           showLoggedInScreen()
+        } else if (when(Constants.LOGIN_ACTION_REFRESH_APP)) {
+          console.log('refresh')
         } else {
+          // let appsDetail = configStore.get(Constants.CONF_APPS_DETAIL)
+          // const selectedAppWithDetail = _.findWhere(appsDetail, {appid: appId, name: choice.Actions})
+          // console.log(selectedAppWithDetail)
           console.log(`USER SELECTED = ${appId} - ${choice.Actions}`)
+          let table2 = new Table()
+          // table2.push(['App Id', appId], ['Choice', choice.Actions])
+          // table2.push({'Some Key': 'Some Value'},
+          //   {'Another much longer key': 'And its corresponding longer value'}
+          // )
+          console.log(table2.toString())
           // const qrcode = require('qrcode-terminal')
           // qrcode.generate('cmmc.io')
           // showLoggedInScreen()
