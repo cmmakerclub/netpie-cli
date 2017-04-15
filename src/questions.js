@@ -2,6 +2,7 @@ import inquirer from 'inquirer'
 import chalk from 'chalk'
 import clear from 'clear'
 import figlet from 'figlet'
+import * as Constants from './constants/Constants'
 let configStore = require('./lib/configstore')
 
 function promptLogin (callback) {
@@ -42,6 +43,23 @@ function promptAppkey () {
 
 }
 
+let promptSelectApp = (processed) => {
+  return inquirer.prompt(
+    {
+      type: 'list',
+      name: 'Actions',
+      message: 'What do you want to do?',
+      choices: [
+        ...processed,
+        new inquirer.Separator(),
+        Constants.LOGIN_ACTION_CREATE_NEW_APP,
+        Constants.LOGIN_ACTION_REFRESH_APP,
+        new inquirer.Separator()
+      ]
+    }
+  )
+}
+
 function showFiglet () {
   clear()
   console.log(
@@ -51,6 +69,21 @@ function showFiglet () {
   )
 }
 
+let showSelectKeyFromAppPrompt = (processed) => {
+  return inquirer.prompt(
+    {
+      type: 'rawlist',
+      name: 'Actions',
+      message: 'Choose key what you want',
+      choices: [
+        Constants.LOGIN_ACTION_BACK,
+        new inquirer.Separator(),
+        ...processed
+      ]
+    }
+  )
+}
+
 export {
-  promptLogin, showFiglet, promptAppkey
+  promptLogin, showFiglet, promptAppkey, promptSelectApp, showSelectKeyFromAppPrompt
 }

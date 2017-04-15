@@ -1,53 +1,21 @@
 'use strict'
 import CLI from 'clui'
 import _ from 'underscore'
-import { login, getAppList, getAllAppDetail } from './lib/netpie'
-import inquirer from 'inquirer'
-import { promptLogin, showFiglet } from './questions'
 import configstore from './lib/configstore'
 import chalk from 'chalk'
 import clear from 'clear'
+import * as Prompt from './questions'
+import * as Netpie from './lib/netpie'
+
 var Table = require('cli-table')
 let Constants = require('./constants/Constants')
-
-let showSelectAppPrompt = (processed) => {
-  return inquirer.prompt(
-    {
-      type: 'list',
-      name: 'Actions',
-      message: 'What do you want to do?',
-      choices: [
-        ...processed,
-        new inquirer.Separator(),
-        Constants.LOGIN_ACTION_CREATE_NEW_APP,
-        Constants.LOGIN_ACTION_REFRESH_APP,
-        new inquirer.Separator()
-      ]
-    }
-  )
-}
-
-let showSelectKeyFromAppPrompt = (processed) => {
-  return inquirer.prompt(
-    {
-      type: 'rawlist',
-      name: 'Actions',
-      message: 'Choose key what you want',
-      choices: [
-        Constants.LOGIN_ACTION_BACK,
-        new inquirer.Separator(),
-        ...processed
-      ]
-    }
-  )
-}
 
 let showLoggedScreen
 let doLoginToNetpie = (...args) => {
   const status = new CLI.Spinner('Authenticating you, please wait...')
   status.start()
-  login(...args)
-  .then(getAppList)
+  Netpie.login(...args)
+  .then(Netpie.getAppList)
   .then((msg) => {
     status.stop()
     status.message('Fetching apps...')
@@ -55,7 +23,7 @@ let doLoginToNetpie = (...args) => {
     configstore.set('apps', msg.apps)
     return msg.apps
   })
-  .then(getAllAppDetail)
+  .then(Netpie.getAllAppDetail)
   .then((appsDetail) => {
     configstore.set('appkeys', appsDetail)
     return appsDetail
@@ -63,7 +31,7 @@ let doLoginToNetpie = (...args) => {
   .then((apps) => {
     status.stop()
     showLoggedScreen = () => {
-      return showSelectAppPrompt(_.map(apps, (v, k) => v.appid))
+      return Prompt.showSelectAppPrompt(_.map(apps, (v, k) => v.appid))
       .then((arg) => {
         if (arg.Actions === Constants.LOGIN_ACTION_CREATE_NEW_APP) {
           console.log(chalk.bold.yellow(`${Constants.LOGIN_ACTION_CREATE_NEW_APP} is not implemented yet.`))
@@ -80,9 +48,8 @@ let doLoginToNetpie = (...args) => {
           let reformed = _.map(selectedApp.key, (appKey, idx) => {
             return _.pick(appKey, 'name', 'key', 'secret', 'keytype', 'online')
           })
-
-          var tableHead = ['Choice', 'Name', 'Key Type', 'App Key', 'App Secret']
-          var table = new Table({
+          const tableHead = ['Choice', 'Name', 'Key Type', 'App Key', 'App Secret']
+          const table = new Table({
             head: tableHead,
             style: {head: ['green']}
           })
@@ -92,12 +59,12 @@ let doLoginToNetpie = (...args) => {
 
           console.log(table.toString())
 
-          showSelectKeyFromAppPrompt(reformed).then((action) => {
+          Prompt.showSelectKeyFromAppPrompt(reformed).then((action) => {
             if (action.Actions === Constants.LOGIN_ACTION_BACK) {
               clear()
               showLoggedScreen()
             } else {
-              var qrcode = require('qrcode-terminal')
+              const qrcode = require('qrcode-terminal')
               qrcode.generate('cmmc.io')
               showLoggedScreen()
             }
@@ -116,8 +83,8 @@ let doLoginToNetpie = (...args) => {
 
 let displayPromptLoginScreen = () => {
   clear()
-  showFiglet()
-  promptLogin((...args) => {
+  Prompt.showFiglet()
+  Prompt.promptLogin((...args) => {
     doLoginToNetpie(...args)
   })
 }
