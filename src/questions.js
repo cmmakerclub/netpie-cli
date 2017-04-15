@@ -9,7 +9,6 @@ import * as Netpie from './lib/netpie'
 import CLI from 'clui'
 
 var Table = require('cli-table')
-// let Constants = require('./constants/Constants')
 
 function promptLogin () {
   const questions = [
@@ -45,7 +44,7 @@ function promptLogin () {
   return inquirer.prompt(questions)
 }
 
-let displayLoggingInToNetpieScreen = (...args) => {
+function displayLoggingInToNetpieScreen (...args) {
   const status = new CLI.Spinner('Authenticating you, please wait...')
   status.start()
   return Netpie.login(...args)
@@ -63,15 +62,9 @@ let displayLoggingInToNetpieScreen = (...args) => {
     configStore.set('appkeys', apps)
     return showLoggedInScreen()
   })
-  .catch((ex) => {
-    status.stop()
-    console.error(ex)
-    console.log('Waiting for login scren..')
-    // setTimeout(displayPromptLoginScreen, 1000)
-  })
 }
 
-let showSelectAppPrompt = () => {
+function showSelectAppPrompt () {
   let apps = configStore.get('appkeys')
   let processed = _.map(apps, (v, k) => v.appid)
   return inquirer.prompt(
@@ -99,7 +92,22 @@ function showFiglet () {
   )
 }
 
-let showSelectKeyFromAppPrompt = (processed) => {
+let showSelectKeyFromAppPrompt = (appId) => {
+  let apps = configStore.get('appkeys')
+  let selectedApp = _.findWhere(apps, {appid: appId})
+  let reformed = _.map(selectedApp.key, (appKey, idx) => {
+    return _.pick(appKey, 'name', 'key', 'secret', 'keytype', 'online')
+  })
+  const tableHead = ['Choice', 'Name', 'Key Type', 'App Key', 'App Secret']
+  const table = new Table({
+    head: tableHead,
+    style: {head: ['green']}
+  })
+  _.each(reformed, (v, k) => {
+    table.push([k, v.name, v.keytype, v.key, v.secret])
+  })
+
+  console.log(table.toString())
   return inquirer.prompt(
     {
       type: 'rawlist',
@@ -108,13 +116,13 @@ let showSelectKeyFromAppPrompt = (processed) => {
       choices: [
         Constants.LOGIN_ACTION_BACK,
         new inquirer.Separator(),
-        ...processed
+        ...reformed
       ]
     }
   )
 }
 
-let showLoggedInScreen = () => {
+function showLoggedInScreen () {
   clear()
   return showSelectAppPrompt()
   .then((arg) => {
@@ -128,23 +136,8 @@ let showLoggedInScreen = () => {
       })
     } else {
       console.log('you choose app detail: ', arg.Actions)
-      let apps = configStore.get('appkeys')
-      let selectedApp = _.findWhere(apps, {appid: arg.Actions})
-      let reformed = _.map(selectedApp.key, (appKey, idx) => {
-        return _.pick(appKey, 'name', 'key', 'secret', 'keytype', 'online')
-      })
-      const tableHead = ['Choice', 'Name', 'Key Type', 'App Key', 'App Secret']
-      const table = new Table({
-        head: tableHead,
-        style: {head: ['green']}
-      })
-      _.each(reformed, (v, k) => {
-        table.push([k, v.name, v.keytype, v.key, v.secret])
-      })
-
-      console.log(table.toString())
-
-      showSelectKeyFromAppPrompt(reformed).then((action) => {
+      let appId = arg.Actions
+      showSelectKeyFromAppPrompt(appId).then((action) => {
         if (action.Actions === Constants.LOGIN_ACTION_BACK) {
           clear()
           showLoggedInScreen()
