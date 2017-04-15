@@ -105,8 +105,10 @@ let showSelectKeyFromAppPrompt = (appId) => {
   let apps = configStore.get('appkeys')
   let selectedApp = _.findWhere(apps, {appid: appId})
   let reformed = _.map(selectedApp.key, (appKey, idx) => _.pick(appKey, 'name', 'key', 'secret', 'keytype', 'online'))
-  _.each(reformed, (v, k) => table.push([k + NUM_MENUS, v.name, v.keytype, v.key, v.secret]))
-  console.log(table.toString())
+  _.each(reformed, (v, k) => table.push([k + NUM_MENUS + 1, v.name, v.keytype, v.key, v.secret]))
+  if (_.size(table) > 0) {
+    console.log(table.toString())
+  }
   return inquirer.prompt(
     {
       type: 'rawlist',
@@ -122,38 +124,44 @@ let showSelectKeyFromAppPrompt = (appId) => {
 }
 
 function showLoggedInScreen () {
-  clear()
   return showSelectAppPrompt()
   .then((arg) => {
-    const appId = arg.Actions
-    if (arg.Actions === Constants.LOGIN_ACTION_CREATE_NEW_APP) {
+    const action = arg.Actions
+    let when = _.partial(compare, action)
+
+    if (when(Constants.LOGIN_ACTION_CREATE_NEW_APP)) {
       console.log(chalk.bold.yellow(`${Constants.LOGIN_ACTION_CREATE_NEW_APP} is not implemented yet.`))
       showLoggedInScreen()
-    } else if (arg.Actions === Constants.LOGIN_ACTION_REFRESH_APP) {
+    } else if (when(Constants.LOGIN_ACTION_REFRESH_APP)) {
       displayLoggingInToNetpieScreen({
         username: configStore.get('credentials.username'),
         password: configStore.get('credentials.password')
       })
-    } else if (arg.Actions === Constants.LOGIN_ACTION_LOGOUT) {
+    } else if (when(Constants.LOGIN_ACTION_LOGOUT)) {
       console.log(`LOGOUT`)
       configStore.delete('apps')
       configStore.delete('appkeys')
       configStore.delete('credentials.password')
       configStore.set('isLoggedIn', false)
     } else {
-      console.log('you choose app detail: ', arg.Actions)
-      showSelectKeyFromAppPrompt(appId).then((action) => {
-        if (action.Actions === Constants.LOGIN_ACTION_BACK) {
+      /* choose appId */
+      const appId = arg.Actions
+      console.log(`App Id: ${chalk.bold.green(appId)}`)
+      showSelectKeyFromAppPrompt(appId).then((choice) => {
+        let when = _.partial(compare, choice.Actions)
+        if (when(Constants.LOGIN_ACTION_BACK)) {
           clear()
           showLoggedInScreen()
         } else {
           const qrcode = require('qrcode-terminal')
           qrcode.generate('cmmc.io')
-          showLoggedInScreen()
+          // showLoggedInScreen()
         }
       })
     }
   })
 }
+
+let compare = (a, b) => a === b
 
 export { promptLogin, showFiglet, showSelectAppPrompt, showSelectKeyFromAppPrompt, displayLoggingInToNetpieScreen }
