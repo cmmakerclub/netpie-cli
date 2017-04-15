@@ -19,7 +19,7 @@ function promptLogin () {
       message: 'Enter your NETPIE username or e-mail address:',
       validate: function (value) {
         if (value.length) {
-          Utils.set(Constants.CONF_USERNAME, value)
+          configStore.set(Constants.CONF_USERNAME, value)
           return true
         } else {
           return 'Please enter your username or e-mail address'
@@ -46,7 +46,7 @@ function promptLogin () {
 
 function displayLoggingInToNetpieScreen () {
   const status = new CLI.Spinner('Authenticating you, please wait...')
-  let username = Utils.get(Constants.CONF_USERNAME)
+  let username = configStore.get(Constants.CONF_USERNAME)
   let password = Utils.get(Constants.CONF_PASSWORD)
   status.start()
   return Netpie.login({username, password})
@@ -76,10 +76,12 @@ function displayLoggingInToNetpieScreen () {
 function showSelectAppPrompt () {
   let apps = configStore.get(Constants.CONF_APPS_DETAIL)
   let processed = _.map(apps, (v, k) => v.appid)
+  let defaultValue = _.indexOf(processed, configStore.get(Constants.CONF_SELECTED_APP))
   return inquirer.prompt(
     {
       type: 'list',
       name: 'Actions',
+      default: defaultValue,
       message: 'What do you want to do?',
       choices: [
         ...processed,
@@ -102,32 +104,61 @@ function showFiglet () {
   )
 }
 
-let showSelectKeyFromAppPrompt = (appId) => {
+let showSelectKeyFromAppPrompt = () => {
+  const appId = configStore.get(Constants.CONF_SELECTED_APP)
   const NUM_MENUS = 2
   const head = ['Choice', 'Name', 'Key Type', 'App Key', 'App Secret', 'Online']
   const table = new Table({head, style: {head: ['green']}})
-
-  let apps = configStore.get(Constants.CONF_APPS_DETAIL)
-  let selectedApp = _.findWhere(apps, {appid: appId})
-  let reformed = _.map(selectedApp.key, (appKey, idx) => _.pick(appKey, 'name', 'key', 'secret', 'keytype', 'online'))
+  const apps = configStore.get(Constants.CONF_APPS_DETAIL)
+  const selectedApp = _.findWhere(apps, {appid: appId})
+  const reformed = _.map(selectedApp.key, (appKey, idx) => _.pick(appKey, 'name', 'key', 'secret', 'keytype', 'online'))
+  let inquirerType = 'list'
   _.each(reformed, (v, k) => table.push([k + NUM_MENUS + 1, v.name, v.keytype, v.key, v.secret, v.online]))
   if (_.size(table) > 0) {
+    inquirerType = 'rawlist'
     console.log(table.toString())
+  } else {
+    inquirerType = 'rawlist'
+    console.log(chalk.bold.yellow('No applications found.'))
   }
-  let choices = _.map(reformed, (v, k) => `${v.name}`)
+  // let choices = _.map(reformed, (v, k) => `${v.name}`)
   return inquirer.prompt(
     {
-      type: 'rawlist',
+      type: inquirerType,
       name: 'Actions',
-      message: 'Choose key what you want',
+      message: 'What you want to do?',
       choices: [
         Constants.LOGIN_ACTION_BACK,
-        // Constants.LOGIN_ACTION_REFRESH_APP,
-        new inquirer.Separator(),
-        ...choices
+        Constants.LOGIN_ACTION_REFRESH_APP,
+        new inquirer.Separator()
+        // ...choices
       ]
     }
   )
+}
+
+function showAppDetailPrompt () {
+  showSelectKeyFromAppPrompt().then((choice) => {
+    let when = _.partial(compare, choice.Actions)
+    if (when(Constants.LOGIN_ACTION_BACK)) {
+      clear()
+      showFiglet()
+      showLoggedInScreen()
+    } else if (when(Constants.LOGIN_ACTION_REFRESH_APP)) {
+      clear()
+      showFiglet()
+      refreshApp()
+    } else {
+      // console.log(configStore.all.apps.detail[appId].key[0])
+    }
+  })
+}
+
+function refreshApp () {
+  displayLoggingInToNetpieScreen({
+    username: configStore.get(Constants.CONF_USERNAME),
+    password: configStore.get(Constants.CONF_PASSWORD)
+  })
 }
 
 function showLoggedInScreen () {
@@ -141,29 +172,16 @@ function showLoggedInScreen () {
     } else if (when(Constants.LOGIN_ACTION_REFRESH_APP)) {
       clear()
       showFiglet()
-      displayLoggingInToNetpieScreen({
-        username: configStore.get(Constants.CONF_USERNAME),
-        password: configStore.get(Constants.CONF_PASSWORD)
-      })
+      refreshApp()
     } else if (when(Constants.LOGIN_ACTION_LOGOUT)) {
       Utils.logout()
     } else {
       /* choose appId */
+      clear()
       const appId = arg.Actions
       console.log(`App Id: ${chalk.bold.green(appId)}`)
-      clear()
-      showSelectKeyFromAppPrompt(appId).then((choice) => {
-        let when = _.partial(compare, choice.Actions)
-        if (when(Constants.LOGIN_ACTION_BACK)) {
-          clear()
-          showFiglet()
-          showLoggedInScreen()
-        } else if (when(Constants.LOGIN_ACTION_REFRESH_APP)) {
-          console.log('refresh')
-        } else {
-          console.log(configStore.all.apps.detail[appId].key[0])
-        }
-      })
+      configStore.set(Constants.CONF_SELECTED_APP, appId)
+      showAppDetailPrompt()
     }
   })
 }

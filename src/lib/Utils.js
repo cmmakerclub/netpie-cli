@@ -10,6 +10,7 @@ export function logout () {
   configStore.delete(Constants.CONF_APPS_DETAIL)
   configStore.delete(Constants.CONF_APPS_LIST)
   configStore.delete(Constants.CONF_PASSWORD)
+  set(Constants.CONF_PASSWORD, '')
   configStore.set(Constants.CONF_IS_LOGGED_IN, false)
 }
 
