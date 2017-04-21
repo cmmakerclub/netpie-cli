@@ -59,9 +59,10 @@ const getAppList = (request) => {
 
 let login = (request) => {
   return new Promise((resolve, reject) => {
-    requestAgent.post('https://netpie.io:443/actions/login')
+    requestAgent.post('https://netpie.io/actions/login')
     .redirects(5)
     .type('form')
+    .timeout(3000)
     // .send(request.params)
     .send({username: request.username, password: request.password, redirectpath: ''})
     .end(function (err, res) {
@@ -76,7 +77,6 @@ let login = (request) => {
           reject(new Error('[X] invalid login'))
         }
       } else {
-        console.log('Oh no! error ', err)
         reject(err)
       }
     })

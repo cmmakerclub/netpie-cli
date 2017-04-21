@@ -88,8 +88,15 @@ function promptLogin() {
   return _inquirer2.default.prompt(questions);
 }
 
+var retry = 0;
+
 function displayLoggingInToNetpieScreen() {
-  var status = new _clui2.default.Spinner('Authenticating you, please wait...');
+  var status = void 0;
+  if (retry === 0) {
+    status = new _clui2.default.Spinner('Authenticating you, please wait...');
+  } else {
+    status = new _clui2.default.Spinner('Authenticating you, please wait... retrying.. ' + retry);
+  }
   var username = _Configstore2.default.get(Constants.CONF_USERNAME);
   var password = Utils.get(Constants.CONF_PASSWORD);
   status.start();
@@ -108,7 +115,12 @@ function displayLoggingInToNetpieScreen() {
     return showLoggedInScreen();
   }).catch(function (err) {
     status.stop();
-    throw err;
+    retry++;
+    if (retry > 10) {
+      console.error(err);
+      throw err;
+    }
+    displayLoggingInToNetpieScreen();
   });
 }
 

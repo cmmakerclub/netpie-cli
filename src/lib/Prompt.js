@@ -44,8 +44,15 @@ function promptLogin () {
   return inquirer.prompt(questions)
 }
 
+let retry = 0
+
 function displayLoggingInToNetpieScreen () {
-  const status = new CLI.Spinner('Authenticating you, please wait...')
+  let status
+  if (retry === 0) {
+    status = new CLI.Spinner(`Authenticating you, please wait...`)
+  } else {
+    status = new CLI.Spinner(`Authenticating you, please wait... retrying.. ${retry}`)
+  }
   let username = configStore.get(Constants.CONF_USERNAME)
   let password = Utils.get(Constants.CONF_PASSWORD)
   status.start()
@@ -69,7 +76,12 @@ function displayLoggingInToNetpieScreen () {
   })
   .catch((err) => {
     status.stop()
-    throw err
+    retry++
+    if (retry > 10) {
+      console.error(err)
+      throw err
+    }
+    displayLoggingInToNetpieScreen()
   })
 }
 

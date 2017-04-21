@@ -85,7 +85,7 @@ var getAppList = function getAppList(request) {
 
 var login = function login(request) {
   return new Promise(function (resolve, reject) {
-    requestAgent.post('https://netpie.io:443/actions/login').redirects(5).type('form')
+    requestAgent.post('https://netpie.io/actions/login').redirects(5).type('form').timeout(3000)
     // .send(request.params)
     .send({ username: request.username, password: request.password, redirectpath: '' }).end(function (err, res) {
       if (!(err || !res.ok)) {
@@ -99,7 +99,6 @@ var login = function login(request) {
           reject(new Error('[X] invalid login'));
         }
       } else {
-        console.log('Oh no! error ', err);
         reject(err);
       }
     });
