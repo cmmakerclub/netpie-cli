@@ -57,12 +57,14 @@ const getAppList = (request) => {
   })
 }
 
+const LOGIN_URL = 'https://netpie.io/actions/login'
+
 let login = (request) => {
   return new Promise((resolve, reject) => {
-    requestAgent.post('https://netpie.io/actions/login')
+    requestAgent.post(LOGIN_URL)
     .redirects(5)
     .type('form')
-    .timeout(3000)
+    .timeout(6000)
     // .send(request.params)
     .send({username: request.username, password: request.password, redirectpath: ''})
     .end(function (err, res) {

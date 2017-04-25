@@ -25,3 +25,4 @@ Constants.CONF_PASSWORD = 'credentials.password';
 Constants.CONF_SELECTED_APP = 'conf.selected.app';
 
 module.exports = Constants;
+//# sourceMappingURL=Constants.js.map

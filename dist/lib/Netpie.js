@@ -83,9 +83,10 @@ var getAppList = function getAppList(request) {
   });
 };
 
+var LOGIN_URL = 'https://netpie.io/actions/login';
 var login = function login(request) {
   return new Promise(function (resolve, reject) {
-    requestAgent.post('https://netpie.io/actions/login').redirects(5).type('form').timeout(3000)
+    requestAgent.post(LOGIN_URL).redirects(5).type('form').timeout(6000)
     // .send(request.params)
     .send({ username: request.username, password: request.password, redirectpath: '' }).end(function (err, res) {
       if (!(err || !res.ok)) {
@@ -110,3 +111,4 @@ exports.parseAppDetail = parseAppDetail;
 exports.parseAppList = parseAppList;
 exports.getAppList = getAppList;
 exports.getAllAppDetail = getAllAppDetail;
+//# sourceMappingURL=netpie.js.map

@@ -12,5 +12,6 @@ describe('src/app.js', _ => {
     let result = sum(1, 2, 3)
 
     expect(result).to.equal(6)
+    expect(result).to.equal(6)
   })
 })
