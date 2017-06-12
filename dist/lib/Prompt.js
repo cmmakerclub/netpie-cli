@@ -45,6 +45,8 @@ var _Utils = require('./Utils');
 
 var Utils = _interopRequireWildcard(_Utils);
 
+var _NetpieAuth = require('./netpie-auth/src/NetpieAuth');
+
 var _clui = require('clui');
 
 var _clui2 = _interopRequireDefault(_clui);
@@ -56,6 +58,11 @@ var _cliTable2 = _interopRequireDefault(_cliTable);
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var global = {
+  currentAppKeysInAppSelectedAppId: '',
+  appId: ''
+};
 
 function promptLogin() {
   var questions = [{
@@ -146,34 +153,57 @@ function showFiglet() {
 
 var showSelectKeyFromAppPrompt = function showSelectKeyFromAppPrompt() {
   var appId = _Configstore2.default.get(Constants.CONF_SELECTED_APP);
-  var NUM_MENUS = 2;
+  var TABLE_IDX_OFFSET = 0;
   var head = ['Choice', 'Name', 'Key Type', 'App Key', 'App Secret', 'Online'];
   var table = new _cliTable2.default({ head: head, style: { head: ['green'] } });
   var apps = _Configstore2.default.get(Constants.CONF_APPS_DETAIL);
   var selectedApp = _underscore2.default.findWhere(apps, { appid: appId });
-  var reformed = _underscore2.default.map(selectedApp.key, function (appKey, idx) {
-    return _underscore2.default.pick(appKey, 'name', 'key', 'secret', 'keytype', 'online');
+  var reducedAppKeys = _underscore2.default.map(selectedApp.key, function (app, idx) {
+    return _underscore2.default.pick(app, 'name', 'key', 'secret', 'keytype', 'online');
   });
+  var appKeys = [];
   var inquirerType = 'list';
-  _underscore2.default.each(reformed, function (v, k) {
-    return table.push([k + NUM_MENUS + 1, v.name, v.keytype, v.key, v.secret, v.online]);
+  global.currentAppKeysInAppSelectedAppId = reducedAppKeys;
+  global.appId = appId;
+  // fill table
+  (0, _underscore2.default)(reducedAppKeys).each(function (v, k) {
+    table.push([k + TABLE_IDX_OFFSET + 1, v.name, v.keytype, v.key, v.secret, v.online]);
+    appKeys.push('' + v.name);
   });
+  // let appAppKeys = _.pick(reducedAppKeys, 'key')
+  // console.log('redeuced app key', reducedAppKeys)
+  // console.log('allappkey', appAppKeys)
+  // const allAppKeys = _.map(reducedAppKeys, (app, idx) => _.pick(app, 'key'))
+  // console.log('allAppKeys', allAppKeys)
   if (_underscore2.default.size(table) > 0) {
-    inquirerType = 'rawlist';
+    inquirerType = 'list';
     console.log(table.toString());
   } else {
-    inquirerType = 'rawlist';
+    inquirerType = 'list';
     console.log(_chalk2.default.bold.yellow('No applications found.'));
   }
   // let choices = _.map(reformed, (v, k) => `${v.name}`)
-  return _inquirer2.default.prompt({
+  // let processed = _.map(apps, (v, k) => v.appid)
+  var questions = [{
     type: inquirerType,
     name: 'Actions',
     message: 'What you want to do?',
-    choices: [Constants.LOGIN_ACTION_BACK, Constants.LOGIN_ACTION_REFRESH_APP, new _inquirer2.default.Separator()
+    choices: [Constants.LOGIN_ACTION_BACK,
+    // Constants.LOGIN_ACTION_REFRESH_APP,
+    Constants.SHOW_MQTT_DETAIL, new _inquirer2.default.Separator()
     // ...choices
     ]
-  });
+  }, {
+    name: Constants.MENU_SELECTED_APP_DETAIL_KEY,
+    message: 'Select applications to see the detail',
+    type: 'checkbox',
+    choices: appKeys,
+    when: function when(answers) {
+      // console.log('answers', answers)
+      return answers.Actions === Constants.SHOW_MQTT_DETAIL;
+    }
+  }];
+  return _inquirer2.default.prompt(questions);
 };
 
 function showAppDetailPrompt() {
@@ -187,9 +217,51 @@ function showAppDetailPrompt() {
       (0, _clear2.default)();
       showFiglet();
       refreshApp();
+    } else if (when(Constants.SHOW_MQTT_DETAIL)) {
+      var selectedAppKeys = choice[Constants.MENU_SELECTED_APP_DETAIL_KEY];
+      var res = _underscore2.default.filter(global.currentAppKeysInAppSelectedAppId, function (app) {
+        return _underscore2.default.indexOf(selectedAppKeys, app.name) !== -1;
+      });
+      // console.log('res', res)
+      var appRes = res[0];
+      // console.log('appRes', appRes)
+      var netpieAuth = new _NetpieAuth.NetpieAuth({ appid: global.appId, appkey: appRes.key, appsecret: appRes.secret });
+      netpieAuth.initSync();
+      netpieAuth.getMqttAuth(function (mqttAuthStruct) {
+        // console.log('Auth', mqttAuthStruct)
+        var username = mqttAuthStruct.username,
+            password = mqttAuthStruct.password,
+            client_id = mqttAuthStruct.client_id,
+            prefix = mqttAuthStruct.prefix,
+            host = mqttAuthStruct.host,
+            port = mqttAuthStruct.port;
+        // eslint-disable-next-line camelcase
+
+        var head = ['host', 'user', 'pass', 'clientId', 'prefix', 'port'];
+        var table = new _cliTable2.default({ head: head, style: { head: ['green'] } });
+        table.push([mqttAuthStruct.host, mqttAuthStruct.username, mqttAuthStruct.password, mqttAuthStruct.client_id, mqttAuthStruct.prefix, mqttAuthStruct.port]);
+        console.log(table.toString());
+        // eslint-disable-next-line camelcase
+        console.log('mosquitto_sub -t "' + prefix + '/#" -h ' + host + ' -i ' + client_id + ' -u "' + username + '" -P "' + password + '" -p ' + port + ' -d');
+        // tablue.push
+        // const apps = configStore.get(Constants.CONF_APPS_DETAIL)
+        // const selectedApp = _.findWhere(apps, {appid: appId})
+        // const reducedAppKeys = _.map(selectedApp.key, (app, idx) => _.pick(app, 'name', 'key', 'secret', 'keytype', 'online'))
+        // let appKeys = []
+        // let inquirerType = 'list'
+        // global.currentAppKeysInAppSelectedAppId = reducedAppKeys
+        // global.appId = appId
+        // // fill table
+        // _(reducedAppKeys).each((v, k) => {
+        //   table.push([k + TABLE_IDX_OFFSET + 1, v.name, v.keytype, v.key, v.secret, v.online])
+        //   appKeys.push(`${v.name}`)
+        // })
+      }).then(function (response) {
+        // console.log('18', response)
+      });
     } else {
-      // console.log(configStore.all.apps.detail[appId].key[0])
-    }
+        // console.log(configStore.all.apps.detail[appId].key[0])
+      }
   });
 }
 
@@ -233,4 +305,3 @@ exports.showFiglet = showFiglet;
 exports.showSelectAppPrompt = showSelectAppPrompt;
 exports.showSelectKeyFromAppPrompt = showSelectKeyFromAppPrompt;
 exports.displayLoggingInToNetpieScreen = displayLoggingInToNetpieScreen;
-//# sourceMappingURL=Prompt.js.map

@@ -32,4 +32,3 @@ function promptLogin() {
     promptLogin();
   });
 }
-//# sourceMappingURL=app.js.map

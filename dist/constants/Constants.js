@@ -18,6 +18,8 @@ Constants.LOGIN_ACTION_CREATE_NEW_APP = 'Create new app';
 Constants.LOGIN_ACTION_REFRESH_APP = 'Refresh';
 Constants.LOGIN_ACTION_BACK = 'Back';
 Constants.LOGIN_ACTION_LOGOUT = 'Logout';
+Constants.SHOW_MQTT_DETAIL = 'Show MQTT Detail';
+Constants.MENU_SELECTED_APP_DETAIL_KEY = 'SelectedAppsDetail';
 
 Constants.CONF_USERNAME = 'credentials.username';
 Constants.CONF_PASSWORD = 'credentials.password';
@@ -25,4 +27,3 @@ Constants.CONF_PASSWORD = 'credentials.password';
 Constants.CONF_SELECTED_APP = 'conf.selected.app';
 
 module.exports = Constants;
-//# sourceMappingURL=Constants.js.map
