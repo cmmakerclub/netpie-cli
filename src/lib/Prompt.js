@@ -7,8 +7,16 @@ import _ from 'underscore'
 import configStore from './Configstore'
 import * as Netpie from './Netpie'
 import * as Utils from './Utils'
+import {
+  NetpieAuth
+} from './netpie-auth/src/NetpieAuth'
 import CLI from 'clui'
 import Table from 'cli-table'
+
+let global = {
+  currentAppKeysInAppSelectedAppId: '',
+  appId: ''
+}
 
 function promptLogin () {
   const questions = [
@@ -118,17 +126,26 @@ function showFiglet () {
 
 let showSelectKeyFromAppPrompt = () => {
   const appId = configStore.get(Constants.CONF_SELECTED_APP)
-  const NUM_MENUS = 2
+  const TABLE_IDX_OFFSET = 0
   const head = ['Choice', 'Name', 'Key Type', 'App Key', 'App Secret', 'Online']
   const table = new Table({head, style: {head: ['green']}})
   const apps = configStore.get(Constants.CONF_APPS_DETAIL)
   const selectedApp = _.findWhere(apps, {appid: appId})
-  const reformed = _.map(selectedApp.key, (app, idx) => _.pick(app, 'name', 'key', 'secret', 'keytype', 'online'))
+  const reducedAppKeys = _.map(selectedApp.key, (app, idx) => _.pick(app, 'name', 'key', 'secret', 'keytype', 'online'))
+  let appKeys = []
   let inquirerType = 'list'
-
+  global.currentAppKeysInAppSelectedAppId = reducedAppKeys
+  global.appId = appId
   // fill table
-  _(reformed).each((v, k) => table.push([k + NUM_MENUS + 1, v.name, v.keytype, v.key, v.secret, v.online]))
-
+  _(reducedAppKeys).each((v, k) => {
+    table.push([k + TABLE_IDX_OFFSET + 1, v.name, v.keytype, v.key, v.secret, v.online])
+    appKeys.push(`${v.name}`)
+  })
+  // let appAppKeys = _.pick(reducedAppKeys, 'key')
+  // console.log('redeuced app key', reducedAppKeys)
+  // console.log('allappkey', appAppKeys)
+  // const allAppKeys = _.map(reducedAppKeys, (app, idx) => _.pick(app, 'key'))
+  // console.log('allAppKeys', allAppKeys)
   if (_.size(table) > 0) {
     inquirerType = 'list'
     console.log(table.toString())
@@ -137,7 +154,7 @@ let showSelectKeyFromAppPrompt = () => {
     console.log(chalk.bold.yellow('No applications found.'))
   }
   // let choices = _.map(reformed, (v, k) => `${v.name}`)
-  let processed = _.map(apps, (v, k) => v.appid)
+  // let processed = _.map(apps, (v, k) => v.appid)
   let questions = [{
     type: inquirerType,
     name: 'Actions',
@@ -145,18 +162,18 @@ let showSelectKeyFromAppPrompt = () => {
     choices: [
       Constants.LOGIN_ACTION_BACK,
       // Constants.LOGIN_ACTION_REFRESH_APP,
-      Constants.SHOW_NETPIE_DETAIL,
+      Constants.SHOW_MQTT_DETAIL,
       new inquirer.Separator()
       // ...choices
     ]
   }, {
-    name: 'SelectedAppsDetail',
+    name: Constants.MENU_SELECTED_APP_DETAIL_KEY,
     message: 'Select applications to see the detail',
     type: 'checkbox',
-    choices: processed,
+    choices: appKeys,
     when: function (answers) {
-      console.log('answers', answers)
-      return answers.Actions === Constants.SHOW_NETPIE_DETAIL
+      // console.log('answers', answers)
+      return answers.Actions === Constants.SHOW_MQTT_DETAIL
     }
   }]
   return inquirer.prompt(questions)
@@ -173,6 +190,44 @@ function showAppDetailPrompt () {
       clear()
       showFiglet()
       refreshApp()
+    } else if (when(Constants.SHOW_MQTT_DETAIL)) {
+      let selectedAppKeys = choice[Constants.MENU_SELECTED_APP_DETAIL_KEY]
+      let res = _.filter(global.currentAppKeysInAppSelectedAppId, (app) => {
+        return _.indexOf(selectedAppKeys, app.name) !== -1
+      })
+      // console.log('res', res)
+      let appRes = res[0]
+      // console.log('appRes', appRes)
+      let netpieAuth = new NetpieAuth({appid: global.appId, appkey: appRes.key, appsecret: appRes.secret})
+      netpieAuth.initSync()
+      netpieAuth.getMqttAuth((mqttAuthStruct) => {
+        // console.log('Auth', mqttAuthStruct)
+        let {username, password, client_id, prefix, host, port} = mqttAuthStruct
+// eslint-disable-next-line camelcase
+        const head = ['host', 'user', 'pass', 'clientId', 'prefix', 'port']
+        const table = new Table({head, style: {head: ['green']}})
+        table.push([
+          mqttAuthStruct.host, mqttAuthStruct.username, mqttAuthStruct.password, mqttAuthStruct.client_id, mqttAuthStruct.prefix, mqttAuthStruct.port
+        ])
+        console.log(table.toString())
+// eslint-disable-next-line camelcase
+        console.log(`mosquitto_sub -t "${prefix}/#" -h ${host} -i ${client_id} -u "${username}" -P "${password}" -p ${port} -d`)
+        // tablue.push
+        // const apps = configStore.get(Constants.CONF_APPS_DETAIL)
+        // const selectedApp = _.findWhere(apps, {appid: appId})
+        // const reducedAppKeys = _.map(selectedApp.key, (app, idx) => _.pick(app, 'name', 'key', 'secret', 'keytype', 'online'))
+        // let appKeys = []
+        // let inquirerType = 'list'
+        // global.currentAppKeysInAppSelectedAppId = reducedAppKeys
+        // global.appId = appId
+        // // fill table
+        // _(reducedAppKeys).each((v, k) => {
+        //   table.push([k + TABLE_IDX_OFFSET + 1, v.name, v.keytype, v.key, v.secret, v.online])
+        //   appKeys.push(`${v.name}`)
+        // })
+      }).then((response) => {
+        // console.log('18', response)
+      })
     } else {
       // console.log(configStore.all.apps.detail[appId].key[0])
     }
