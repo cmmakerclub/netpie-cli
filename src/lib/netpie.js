@@ -40,7 +40,8 @@ const get = (url) => {
 const parseAppDetail = _.partial(parseHtmlContent, _, Constants.TYPE_APP_DETAIL)
 const parseAppList = _.partial(parseHtmlContent, _, Constants.TYPE_APP_LIST)
 
-const getAppDetail = (app) => get('https://netpie.io/app/' + app.appid, Constants.TYPE_APP_DETAIL).then(parseAppDetail).then(JSON.parse)
+const getAppDetail = (app) => get('https://netpie.io/app/' + app.appid,
+  Constants.TYPE_APP_DETAIL).then(parseAppDetail).then(JSON.parse)
 const getAllAppDetail = (apps) => Promise.all(_.collect(apps.app, getAppDetail))
 
 const getAppList = (request) => {

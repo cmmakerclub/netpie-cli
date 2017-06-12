@@ -16,6 +16,7 @@ Constants.LOGIN_ACTION_CREATE_NEW_APP = 'Create new app'
 Constants.LOGIN_ACTION_REFRESH_APP = 'Refresh'
 Constants.LOGIN_ACTION_BACK = 'Back'
 Constants.LOGIN_ACTION_LOGOUT = 'Logout'
+Constants.SHOW_NETPIE_DETAIL = 'Show Netpie Detail'
 
 Constants.CONF_USERNAME = 'credentials.username'
 Constants.CONF_PASSWORD = 'credentials.password'

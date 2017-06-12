@@ -123,30 +123,43 @@ let showSelectKeyFromAppPrompt = () => {
   const table = new Table({head, style: {head: ['green']}})
   const apps = configStore.get(Constants.CONF_APPS_DETAIL)
   const selectedApp = _.findWhere(apps, {appid: appId})
-  const reformed = _.map(selectedApp.key, (appKey, idx) => _.pick(appKey, 'name', 'key', 'secret', 'keytype', 'online'))
+  const reformed = _.map(selectedApp.key, (app, idx) => _.pick(app, 'name', 'key', 'secret', 'keytype', 'online'))
   let inquirerType = 'list'
-  _.each(reformed, (v, k) => table.push([k + NUM_MENUS + 1, v.name, v.keytype, v.key, v.secret, v.online]))
+
+  // fill table
+  _(reformed).each((v, k) => table.push([k + NUM_MENUS + 1, v.name, v.keytype, v.key, v.secret, v.online]))
+
   if (_.size(table) > 0) {
-    inquirerType = 'rawlist'
+    inquirerType = 'list'
     console.log(table.toString())
   } else {
-    inquirerType = 'rawlist'
+    inquirerType = 'list'
     console.log(chalk.bold.yellow('No applications found.'))
   }
   // let choices = _.map(reformed, (v, k) => `${v.name}`)
-  return inquirer.prompt(
-    {
-      type: inquirerType,
-      name: 'Actions',
-      message: 'What you want to do?',
-      choices: [
-        Constants.LOGIN_ACTION_BACK,
-        Constants.LOGIN_ACTION_REFRESH_APP,
-        new inquirer.Separator()
-        // ...choices
-      ]
+  let processed = _.map(apps, (v, k) => v.appid)
+  let questions = [{
+    type: inquirerType,
+    name: 'Actions',
+    message: 'What you want to do?',
+    choices: [
+      Constants.LOGIN_ACTION_BACK,
+      // Constants.LOGIN_ACTION_REFRESH_APP,
+      Constants.SHOW_NETPIE_DETAIL,
+      new inquirer.Separator()
+      // ...choices
+    ]
+  }, {
+    name: 'SelectedAppsDetail',
+    message: 'Select applications to see the detail',
+    type: 'checkbox',
+    choices: processed,
+    when: function (answers) {
+      console.log('answers', answers)
+      return answers.Actions === Constants.SHOW_NETPIE_DETAIL
     }
-  )
+  }]
+  return inquirer.prompt(questions)
 }
 
 function showAppDetailPrompt () {
